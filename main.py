@@ -131,12 +131,12 @@ def do_gacha(req: schemas.PullRequest, db: Session = Depends(get_db)):
 
     db.commit()
 
-    return schemas.PullResponse(
-        success=True,
-        message=f"Successfully pulled {pulls_count} card(s)",
-        results=pulled_cards,
-        remaining_gems=user.gems
-    )
+    return {
+        "success": True,
+        "message": f"Successfully pulled {pulls_count} card(s)",
+        "results": pulled_cards,
+        "remaining_gems": user.gems
+    }
 
 @app.get("/inventory/{user_id}", response_model=List[schemas.InventoryItemResponse])
 def get_inventory(user_id: int, db: Session = Depends(get_db)):

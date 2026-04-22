@@ -8,7 +8,7 @@ class UserResponse(BaseModel):
     gems: int
 
     class Config:
-        orm_mode = True
+        from_attributes = True
 
 class CardResponse(BaseModel):
     id: int
@@ -16,7 +16,7 @@ class CardResponse(BaseModel):
     rarity: str
 
     class Config:
-        orm_mode = True
+        from_attributes = True
 
 class InventoryItemResponse(BaseModel):
     id: int
@@ -24,7 +24,7 @@ class InventoryItemResponse(BaseModel):
     quantity: int
 
     class Config:
-        orm_mode = True
+        from_attributes = True
 
 class GachaHistoryResponse(BaseModel):
     id: int
@@ -33,7 +33,7 @@ class GachaHistoryResponse(BaseModel):
     created_at: datetime
 
     class Config:
-        orm_mode = True
+        from_attributes = True
 
 class PullRequest(BaseModel):
     user_id: int
