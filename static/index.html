@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>遊戲抽卡系統</title>
+    <link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>遊戲抽卡系統</h1>
+            <div class="user-info">
+                <span>玩家: <strong id="username">-</strong></span>
+                <span>寶石: <strong id="gems">-</strong></span>
+            </div>
+        </header>
+
+        <main>
+            <section class="gacha-section">
+                <h2>進行抽卡</h2>
+                <div class="gacha-buttons">
+                    <button id="btn-single-pull" class="btn primary">單抽 (200 寶石)</button>
+                    <button id="btn-ten-pull" class="btn primary ten">十連抽 (2000 寶石)</button>
+                </div>
+                <div id="gacha-results" class="results-container">
+                    <!-- 抽卡結果會在這裡顯示 -->
+                </div>
+            </section>
+
+            <div class="split-view">
+                <section class="inventory-section">
+                    <h2>卡片倉庫</h2>
+                    <div id="inventory-grid" class="inventory-grid">
+                        <!-- 卡片倉庫列表 -->
+                    </div>
+                </section>
+
+                <section class="history-section">
+                    <h2>抽卡紀錄</h2>
+                    <ul id="history-list" class="history-list">
+                        <!-- 歷史紀錄 -->
+                    </ul>
+                </section>
+            </div>
+        </main>
+    </div>
+
+    <script src="/static/app.js"></script>
+</body>
+</html>
