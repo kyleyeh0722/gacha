@@ -40,7 +40,7 @@ def init_dummy_data(db: Session):
 
     # Check if test user exists
     if not db.query(models.User).filter(models.User.id == 1).first():
-        user = models.User(id=1, username="TestPlayer", gems=10000)
+        user = models.User(id=1, username="TestPlayer", password="testpassword", gems=10000)
         db.add(user)
         db.commit()
 
@@ -50,6 +50,28 @@ def startup_event():
     init_dummy_data(db)
 
 # --- Endpoints ---
+
+@app.post("/register", response_model=schemas.UserResponse)
+def register(req: schemas.AuthRequest, db: Session = Depends(get_db)):
+    # 檢查是否已存在
+    existing = db.query(models.User).filter(models.User.username == req.username).first()
+    if existing:
+        raise HTTPException(status_code=400, detail="Username already taken")
+    
+    # 建立新使用者
+    new_user = models.User(username=req.username, password=req.password, gems=10000)
+    db.add(new_user)
+    db.commit()
+    db.refresh(new_user)
+    return new_user
+
+@app.post("/login", response_model=schemas.UserResponse)
+def login(req: schemas.AuthRequest, db: Session = Depends(get_db)):
+    user = db.query(models.User).filter(models.User.username == req.username).first()
+    if not user or user.password != req.password:
+        raise HTTPException(status_code=401, detail="Invalid username or password")
+    
+    return user
 
 @app.get("/user/{user_id}", response_model=schemas.UserResponse)
 def get_user(user_id: int, db: Session = Depends(get_db)):

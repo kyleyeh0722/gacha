@@ -44,3 +44,7 @@ class PullResponse(BaseModel):
     message: str
     results: List[CardResponse]
     remaining_gems: int
+
+class AuthRequest(BaseModel):
+    username: str
+    password: str

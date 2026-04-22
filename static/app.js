@@ -1,4 +1,4 @@
-const USER_ID = 1; // 預設測試使用者 ID
+let USER_ID = localStorage.getItem('user_id');
 
 const elements = {
     username: document.getElementById('username'),
@@ -7,16 +7,86 @@ const elements = {
     btnTen: document.getElementById('btn-ten-pull'),
     resultsContainer: document.getElementById('gacha-results'),
     inventoryGrid: document.getElementById('inventory-grid'),
-    historyList: document.getElementById('history-list')
+    historyList: document.getElementById('history-list'),
+    
+    // Auth elements
+    authOverlay: document.getElementById('auth-overlay'),
+    appContent: document.getElementById('app-content'),
+    usernameInput: document.getElementById('username-input'),
+    passwordInput: document.getElementById('password-input'),
+    btnLogin: document.getElementById('btn-login'),
+    btnRegister: document.getElementById('btn-register'),
+    authMessage: document.getElementById('auth-message'),
+    btnLogout: document.getElementById('btn-logout'),
 };
 
+// ================= Auth Logic =================
+async function authenticate(action) {
+    const username = elements.usernameInput.value.trim();
+    const password = elements.passwordInput.value.trim();
+    if(!username || !password) {
+        elements.authMessage.textContent = '請輸入帳號與密碼';
+        return;
+    }
+
+    elements.authMessage.textContent = '處理中...';
+    try {
+        const res = await fetch(`/${action}`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ username, password })
+        });
+        
+        const data = await res.json();
+        if (!res.ok) throw new Error(data.detail || "登入/註冊失敗");
+
+        // 登入成功
+        USER_ID = data.id;
+        localStorage.setItem('user_id', USER_ID);
+        
+        elements.authMessage.textContent = '';
+        elements.authOverlay.style.display = 'none';
+        elements.appContent.style.display = 'block';
+        
+        // 載入資料
+        elements.username.textContent = data.username;
+        elements.gems.textContent = data.gems;
+        fetchInventory();
+        fetchHistory();
+    } catch (err) {
+        elements.authMessage.textContent = err.message;
+    }
+}
+
+elements.btnLogin.addEventListener('click', () => authenticate('login'));
+elements.btnRegister.addEventListener('click', () => authenticate('register'));
+
+elements.btnLogout.addEventListener('click', () => {
+    localStorage.removeItem('user_id');
+    USER_ID = null;
+    elements.appContent.style.display = 'none';
+    elements.authOverlay.style.display = 'flex';
+    elements.usernameInput.value = '';
+    elements.passwordInput.value = '';
+});
+
+// ================= Gacha Logic =================
 async function fetchUser() {
+    if(!USER_ID) return;
     try {
         const res = await fetch(`/user/${USER_ID}`);
-        if (!res.ok) throw new Error("Failed to load user");
+        if (!res.ok) {
+            elements.btnLogout.click(); // 無效的 User_ID
+            return;
+        }
         const user = await res.json();
         elements.username.textContent = user.username;
         elements.gems.textContent = user.gems;
+        
+        elements.authOverlay.style.display = 'none';
+        elements.appContent.style.display = 'block';
+        fetchInventory();
+        fetchHistory();
     } catch (err) {
         console.error(err);
     }
@@ -28,7 +98,6 @@ async function fetchInventory() {
         if (!res.ok) return;
         const inventory = await res.json();
         
-        // 排序：SSR -> SR -> R
         const rarityOrder = { 'SSR': 3, 'SR': 2, 'R': 1 };
         inventory.sort((a, b) => rarityOrder[b.card.rarity] - rarityOrder[a.card.rarity]);
 
@@ -94,11 +163,9 @@ async function doPull(type) {
             return;
         }
 
-        // 更新寶石顯示
         elements.gems.textContent = data.remaining_gems;
-
-        // 顯示結果
         elements.resultsContainer.innerHTML = '';
+        
         data.results.forEach((card, index) => {
             setTimeout(() => {
                 const el = document.createElement('div');
@@ -108,10 +175,9 @@ async function doPull(type) {
                     <div class="name">${card.name}</div>
                 `;
                 elements.resultsContainer.appendChild(el);
-            }, index * 100); // 簡單的動畫延遲
+            }, index * 100);
         });
 
-        // 重新讀取倉庫與歷史
         setTimeout(() => {
             fetchInventory();
             fetchHistory();
@@ -131,7 +197,9 @@ async function doPull(type) {
 elements.btnSingle.addEventListener('click', () => doPull('single'));
 elements.btnTen.addEventListener('click', () => doPull('ten'));
 
-// 初始載入
-fetchUser();
-fetchInventory();
-fetchHistory();
+// 初始啟動邏輯
+if (USER_ID) {
+    fetchUser();
+} else {
+    elements.authOverlay.style.display = 'flex';
+}

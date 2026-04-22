@@ -96,3 +96,21 @@ def test_not_enough_gems(setup_db):
     assert response.status_code == 400
     assert response.json()["detail"] == "Not enough gems"
 
+def test_register():
+    response = client.post("/register", json={"username": "NewPlayer", "password": "newpassword"})
+    assert response.status_code == 200
+    data = response.json()
+    assert data["username"] == "NewPlayer"
+    assert data["gems"] == 10000
+
+def test_login():
+    response = client.post("/login", json={"username": "TestPlayer", "password": "testpassword"})
+    assert response.status_code == 200
+    data = response.json()
+    assert data["username"] == "TestPlayer"
+    assert "gems" in data
+
+def test_login_invalid():
+    response = client.post("/login", json={"username": "TestPlayer", "password": "wrongpassword"})
+    assert response.status_code == 401
+
