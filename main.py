@@ -73,6 +73,16 @@ def login(req: schemas.AuthRequest, db: Session = Depends(get_db)):
     
     return user
 
+@app.post("/add_gems", response_model=schemas.UserResponse)
+def add_gems(req: schemas.AddGemsRequest, db: Session = Depends(get_db)):
+    user = db.query(models.User).filter(models.User.id == req.user_id).first()
+    if not user:
+        raise HTTPException(status_code=404, detail="User not found")
+    user.gems += req.amount
+    db.commit()
+    db.refresh(user)
+    return user
+
 @app.get("/user/{user_id}", response_model=schemas.UserResponse)
 def get_user(user_id: int, db: Session = Depends(get_db)):
     user = db.query(models.User).filter(models.User.id == user_id).first()

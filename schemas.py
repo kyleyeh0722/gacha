@@ -48,3 +48,7 @@ class PullResponse(BaseModel):
 class AuthRequest(BaseModel):
     username: str
     password: str
+
+class AddGemsRequest(BaseModel):
+    user_id: int
+    amount: int = 1000

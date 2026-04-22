@@ -18,6 +18,7 @@ const elements = {
     btnRegister: document.getElementById('btn-register'),
     authMessage: document.getElementById('auth-message'),
     btnLogout: document.getElementById('btn-logout'),
+    btnAddGems: document.getElementById('btn-add-gems'),
 
     // Modal elements
     cardModal: document.getElementById('card-modal'),
@@ -93,6 +94,28 @@ elements.btnLogout.addEventListener('click', () => {
     elements.authOverlay.style.display = 'flex';
     elements.usernameInput.value = '';
     elements.passwordInput.value = '';
+});
+
+elements.btnAddGems.addEventListener('click', async () => {
+    if(!USER_ID) return;
+    try {
+        const res = await fetch('/add_gems', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ user_id: USER_ID, amount: 1000 })
+        });
+        const user = await res.json();
+        if(res.ok) {
+            elements.gems.textContent = user.gems;
+            // 讓數字閃爍一下代表增加成功
+            elements.gems.style.textShadow = "0 0 15px #ffd54f";
+            setTimeout(() => elements.gems.style.textShadow = "0 0 8px rgba(3,218,198,0.4)", 300);
+        } else {
+            alert(user.detail || "無法增加寶石");
+        }
+    } catch (err) {
+        console.error(err);
+    }
 });
 
 // ================= Gacha Logic =================
