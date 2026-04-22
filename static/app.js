@@ -27,13 +27,29 @@ const elements = {
 };
 
 // ================= Modal Logic =================
-function showCardModal(cardData) {
+function showCardModal(cardData, inventoryData = null) {
     elements.cardModalInner.className = `card-large ${cardData.rarity.toLowerCase()}`;
-    elements.cardModalInner.innerHTML = `
+    let html = `
         <img src="/static/images/${cardData.name}.png" alt="${cardData.name}" onerror="this.src='/static/images/R_Slime.png'" />
         <div class="rarity">${cardData.rarity}</div>
         <div class="name">${cardData.name}</div>
     `;
+
+    if (inventoryData) {
+        let prices = { "R": 200, "SR": 1000, "SSR": 10000 };
+        let price = prices[cardData.rarity] || 0;
+        html += `
+            <div class="sell-actions" style="margin-top: 20px;">
+                <p style="margin-bottom: 10px; color: #ddd; font-size: 0.9rem;">持有限量: <strong style="color:var(--secondary-color);">${inventoryData.quantity}</strong> | 賣出單價: <strong style="color:var(--rarity-sr);">${price}</strong> 寶石</p>
+                <div style="display:flex; gap:10px; justify-content:center;">
+                    <button class="btn small primary" onclick="sellCard(${cardData.id}, 1)">賣出一張</button>
+                    <button class="btn small secondary" onclick="sellCard(${cardData.id}, ${inventoryData.quantity})">全數賣出</button>
+                </div>
+            </div>
+        `;
+    }
+
+    elements.cardModalInner.innerHTML = html;
     elements.cardModal.style.display = 'flex';
 }
 
@@ -45,6 +61,33 @@ elements.cardModal.addEventListener('click', (e) => {
         elements.cardModal.style.display = 'none';
     }
 });
+
+window.sellCard = async function(cardId, quantity) {
+    if(!USER_ID) return;
+    elements.cardModalInner.style.opacity = '0.5';
+    try {
+        const res = await fetch('/sell_card', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ user_id: parseInt(USER_ID), card_id: cardId, quantity: quantity })
+        });
+        const data = await res.json();
+        if(res.ok) {
+            elements.gems.textContent = data.gems;
+            elements.cardModal.style.display = 'none';
+            // 閃爍寶石提示
+            elements.gems.style.textShadow = "0 0 15px #ffd54f";
+            setTimeout(() => elements.gems.style.textShadow = "0 0 8px rgba(3,218,198,0.4)", 300);
+            fetchInventory();
+        } else {
+            alert(data.detail || "販賣失敗");
+        }
+    } catch (err) {
+        console.error(err);
+    } finally {
+        elements.cardModalInner.style.opacity = '1';
+    }
+};
 
 // ================= Auth Logic =================
 async function authenticate(action) {
@@ -159,8 +202,8 @@ async function fetchInventory() {
                 <div class="rarity">${item.card.rarity}</div>
                 <div class="name">${item.card.name}</div>
             `;
-            // 綁定點擊事件
-            el.addEventListener('click', () => showCardModal(item.card));
+            // 綁定點擊事件，傳入 inventory 紀錄以顯示賣出按鈕
+            el.addEventListener('click', () => showCardModal(item.card, item));
             elements.inventoryGrid.appendChild(el);
         });
     } catch (err) {

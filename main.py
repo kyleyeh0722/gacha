@@ -32,8 +32,10 @@ def init_dummy_data(db: Session):
             models.Card(name="R_Bat", rarity="R"),
             models.Card(name="SR_Knight", rarity="SR"),
             models.Card(name="SR_Mage", rarity="SR"),
+            models.Card(name="SR_Archer", rarity="SR"),
             models.Card(name="SSR_Dragon", rarity="SSR"),
             models.Card(name="SSR_DemonLord", rarity="SSR"),
+            models.Card(name="SSR_Succubus", rarity="SSR"),
         ]
         db.add_all(cards)
         db.commit()
@@ -79,6 +81,37 @@ def add_gems(req: schemas.AddGemsRequest, db: Session = Depends(get_db)):
     if not user:
         raise HTTPException(status_code=404, detail="User not found")
     user.gems += req.amount
+    db.commit()
+    db.refresh(user)
+    return user
+
+@app.post("/sell_card", response_model=schemas.UserResponse)
+def sell_card(req: schemas.SellCardRequest, db: Session = Depends(get_db)):
+    user = db.query(models.User).filter(models.User.id == req.user_id).first()
+    if not user:
+        raise HTTPException(status_code=404, detail="User not found")
+        
+    inv_item = db.query(models.Inventory).filter(
+        models.Inventory.user_id == req.user_id,
+        models.Inventory.card_id == req.card_id
+    ).first()
+    
+    if not inv_item or inv_item.quantity < req.quantity:
+        raise HTTPException(status_code=400, detail="Not enough cards to sell")
+        
+    card = db.query(models.Card).filter(models.Card.id == req.card_id).first()
+    
+    # 販賣價格邏輯
+    prices = {"R": 200, "SR": 1000, "SSR": 10000}
+    price = prices.get(card.rarity, 0)
+    
+    # 更新數量與寶石
+    inv_item.quantity -= req.quantity
+    user.gems += price * req.quantity
+    
+    if inv_item.quantity == 0:
+        db.delete(inv_item)
+        
     db.commit()
     db.refresh(user)
     return user

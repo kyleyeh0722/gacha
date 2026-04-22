@@ -52,3 +52,8 @@ class AuthRequest(BaseModel):
 class AddGemsRequest(BaseModel):
     user_id: int
     amount: int = 1000
+
+class SellCardRequest(BaseModel):
+    user_id: int
+    card_id: int
+    quantity: int
