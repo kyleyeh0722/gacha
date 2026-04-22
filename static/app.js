@@ -18,7 +18,32 @@ const elements = {
     btnRegister: document.getElementById('btn-register'),
     authMessage: document.getElementById('auth-message'),
     btnLogout: document.getElementById('btn-logout'),
+
+    // Modal elements
+    cardModal: document.getElementById('card-modal'),
+    cardModalInner: document.getElementById('card-modal-inner'),
+    cardModalClose: document.getElementById('card-modal-close'),
 };
+
+// ================= Modal Logic =================
+function showCardModal(cardData) {
+    elements.cardModalInner.className = `card-large ${cardData.rarity.toLowerCase()}`;
+    elements.cardModalInner.innerHTML = `
+        <img src="/static/images/${cardData.name}.png" alt="${cardData.name}" onerror="this.src='/static/images/R_Slime.png'" />
+        <div class="rarity">${cardData.rarity}</div>
+        <div class="name">${cardData.name}</div>
+    `;
+    elements.cardModal.style.display = 'flex';
+}
+
+elements.cardModalClose.addEventListener('click', () => {
+    elements.cardModal.style.display = 'none';
+});
+elements.cardModal.addEventListener('click', (e) => {
+    if (e.target === elements.cardModal) {
+        elements.cardModal.style.display = 'none';
+    }
+});
 
 // ================= Auth Logic =================
 async function authenticate(action) {
@@ -111,6 +136,8 @@ async function fetchInventory() {
                 <div class="rarity">${item.card.rarity}</div>
                 <div class="name">${item.card.name}</div>
             `;
+            // 綁定點擊事件
+            el.addEventListener('click', () => showCardModal(item.card));
             elements.inventoryGrid.appendChild(el);
         });
     } catch (err) {
@@ -178,6 +205,8 @@ async function doPull(type) {
                     <div class="rarity">${card.rarity}</div>
                     <div class="name">${card.name}</div>
                 `;
+                // 綁定點擊事件
+                el.addEventListener('click', () => showCardModal(card));
                 elements.resultsContainer.appendChild(el);
             }, index * 100);
         });
