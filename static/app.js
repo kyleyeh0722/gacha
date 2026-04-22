@@ -107,6 +107,7 @@ async function fetchInventory() {
             el.className = `card ${item.card.rarity.toLowerCase()} inventory-item`;
             el.innerHTML = `
                 <div class="qty">x${item.quantity}</div>
+                <img src="/static/images/${item.card.name}.png" alt="${item.card.name}" onerror="this.src='/static/images/R_Slime.png'" />
                 <div class="rarity">${item.card.rarity}</div>
                 <div class="name">${item.card.name}</div>
             `;
@@ -170,7 +171,10 @@ async function doPull(type) {
             setTimeout(() => {
                 const el = document.createElement('div');
                 el.className = `card ${card.rarity.toLowerCase()}`;
+                // 動態設定延遲，讓卡片依序翻開
+                el.style.animationDelay = `${index * 0.1}s`;
                 el.innerHTML = `
+                    <img src="/static/images/${card.name}.png" alt="${card.name}" onerror="this.src='/static/images/R_Slime.png'" />
                     <div class="rarity">${card.rarity}</div>
                     <div class="name">${card.name}</div>
                 `;
