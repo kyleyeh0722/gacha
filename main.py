@@ -160,6 +160,7 @@ def do_gacha(req: schemas.PullRequest, db: Session = Depends(get_db)):
         else:
             inv_item = models.Inventory(user_id=user.id, card_id=card.id, quantity=1)
             db.add(inv_item)
+            db.flush() # 強制同步到當前 Transaction，讓下一次迴圈能 query 到這筆新資料
 
     db.commit()
 
